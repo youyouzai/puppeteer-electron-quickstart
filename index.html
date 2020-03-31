@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+</head>
+<style>
+  body {
+    padding: 15px 20px;
+  }
+
+  .container {
+    color: #333;
+    margin: 10px;
+  }
+  .primary{
+    color: #fff;
+    background-color: #409eff;
+    border-color: #409eff;
+  }
+  .danger {
+    color: #fff;
+    background-color: #f56c6c;
+    border-color: #f56c6c;
+  }
+  #logger {
+    padding: 15px 20px;
+    border: solid 1px #ccc;
+  }
+</style>
+<body>
+  <div class="container">
+    <div>
+      <span>用户名：</span>
+      <input id="email" type="text" placeholder="账号" value="bschen0410@163.com" />
+    </div>
+    <div>
+      <span>用户名：</span>
+      <input id="password" type="text" placeholder="密码" value="wsfreetchc2352311" />
+    </div>
+  </div>
+  <div class="container">
+    <input id="fileInput" type="file" webkitdirectory />
+    <button class="primary" onclick="create()">上传产品</button>
+  </div>
+  <div class="container">
+    <span>删除的日期：</span>
+    <input id="dateInput" type="text" placeholder="如2020-01-01" value="2020-03-21" />
+    <button class="danger" onclick="remove()">删除产品</button>
+  </div>
+  <div class="container">
+    <div class="title">日志记录：</div>
+    <div id="logger" style="overflow: auto; overflow-x: hidden; height: 500px;">
+    </div>
+    <script>
+      require('./babel-output/index.js');
+      require('./babel-output/lib/create.js');
+      require('./babel-output/lib/file-paths.js');
+      require('./babel-output/lib/logger.js');
+      require('./babel-output/lib/main.js');
+      require('./babel-output/lib/puppeteer-wrapper.js');
+      require('./babel-output/lib/remove.js');
+    </script>
+    <script>
+      const { ipcRenderer } = require('electron');
+      function remove() {
+        var user = validate()
+        if(!user) return;
+        var date = document.querySelector('#dateInput').value;
+        var reg = /[0-9]{4}-[0-9]{2}-[0-9]{2}/;
+        if (!reg.test(date)) {
+          alert('请填写正确的日期格式，如2020-01-01')
+        } else {
+          ipcRenderer.send('remove', {date, email:user.email, password:user.password });
+        }
+      }
+      function create() {
+        var user = validate()
+        if(user) {
+          var fileInput = document.querySelector('#fileInput')
+          var files = fileInput.files;
+          if(files.length === 0) {
+            alert('请选择数据文件件')
+          }else {
+            var file = fileInput.files[0];
+            ipcRenderer.send('create', {email:user.email, password:user.password, filePath: file.path});
+          } 
+        }
+      }
+      function validate() {
+        var email = document.querySelector('#email').value; 
+        var password = document.querySelector('#password').value; 
+        if(!email || !password) {
+          alert('用户名或密码不能为空！')
+          return false;
+        }else{
+          return {email, password}
+        }
+      }
+    </script>
+</body>
+
+</html>
